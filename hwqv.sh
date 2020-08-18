@@ -57,7 +57,7 @@ function viewBoard {
     case $choice in
       1) lscpu ;;
       2) dmidecode -t 0 ;;
-      3) free -h ;;
+      3) free -h ; dmidecode|grep 'Type: DDR' ;;
       4) hwclock ;;
       5) lspci -nn ;;
       6) udevadm monitor --environment --udev ;;

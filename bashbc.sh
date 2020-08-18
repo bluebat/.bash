@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/usr/bin/bash
 # A command-line calculator in pure BASH
-# (c) 2014 Wei-Lun Chao <bluebat@member.fsf.org>, GPL.
+# (c) 2016 Wei-Lun Chao <bluebat@member.fsf.org>, GPL.
+# https://speakerdeck.com/bluebat/a-command-line-calculator-in-pure-bash
 # v1.0, 2014-3-25, for C+-*/C and C^(Z/2)
 # v1.1, 2016-10-20, tweak n++ and shiftScale
 
@@ -302,8 +303,8 @@ function exprEval {
 
 if [ $# -eq 0 ] ; then
   echo "A command-line calculator in pure BASH"
-  echo "(c) 2014 Wei-Lun Chao <bluebat@member.fsf.org>, GPL."
-  echo "Usage: [scale=0..(4)..6] bashbc ARITH_EXPR"
+  echo "(c) 2016 Wei-Lun Chao <bluebat@member.fsf.org>, GPL."
+  echo "Usage: [scale=0..(3)..5] bashbc ARITH_EXPR"
   exit 1
 else
   declare -l exprStr=`printf '%s' "$*"`
