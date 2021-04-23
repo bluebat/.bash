@@ -122,24 +122,26 @@ function viewSound {
     echo
     echo "0) Go back"
     echo "1) Cards"
-    echo "2) Chip"
-    echo "3) Devices"
-    echo "4) Mixer"
-    echo "5) Driver"
-    echo "6) Record Test"
-    echo "7) Play Test"
-    echo "8) Full list"
+    echo "2) Controller Chip"
+    echo "3) CODEC Chip"
+    echo "4) Devices"
+    echo "5) Mixer"
+    echo "6) Driver"
+    echo "7) Record Test"
+    echo "8) Play Test"
+    echo "9) Full list"
     read -p "Your choice: " -n 1 choice
     echo
     case $choice in
       1) cat /proc/asound/cards ;;
       2) lspci -v|sed -n '/Audio/,/^$/p' ;;
-      3) arecord -l;aplay -l ;;
-      4) amixer;amixer contents ;;
-      5) alsactl --version ;;
-      6) arecord -d 6 -f dat test.wav ;;
-      7) aplay test.wav ;;
-      8) pacmd list|more ;;
+      3) head -1 /proc/asound/card*/codec#* ;;
+      4) arecord -l;aplay -l ;;
+      5) amixer;amixer contents ;;
+      6) alsactl --version ;;
+      7) arecord -d 6 -f dat test.wav ;;
+      8) aplay test.wav ;;
+      9) pacmd list|more ;;
     esac
   done
 }
