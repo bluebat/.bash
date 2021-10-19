@@ -1,5 +1,5 @@
 #!/bin/bash
-# 20170116~20210413 by Wei-Lun Chao
+# 20170116~20211018 by Wei-Lun Chao
 #
 modprobe snd_pcsp
 export PS1='\[\e[1;33m\]\u@\w> \[\e[0m\]'
@@ -7,7 +7,7 @@ export SETFILE=$HOME/autoexec.set
 
 case ${LANG%%.*} in
   cmn_TW|zh_TW)
-    _description="基於 Fedora Linux 的自動執行測試系統"
+    _description="Linux 自動執行測試程式"
     _modify="修改 /opt/firstrun 內容以插入自動程序，或者："
     _usage="用法："
     _applications="應用："
@@ -23,7 +23,7 @@ case ${LANG%%.*} in
     _seconds="秒"
     ;;
   yue_*)
-    _description="跟埋 Fedora Linux 嘅自行測試系統"
+    _description="Linux 自行測試程序"
     _modify="修改 /opt/firstrun 內容俾攝入自動架步，定抑："
     _usage="用法："
     _applications="應用："
@@ -39,7 +39,7 @@ case ${LANG%%.*} in
     _seconds="秒"
     ;;
   *)
-    _description="Automatic Test System based on Fedora Linux"
+    _description="Linux Automatic Test Program"
     _modify="Modify /opt/firstrun to insert automatic procedure, or:"
     _usage="Usage:"
     _applications="Applicaitons:"
@@ -59,9 +59,9 @@ esac
 function about {
   clear
   echo -ne "\033[32m"
-  banner "Firstrun Spin"
+  banner "Firstrun"
   echo "${_description}"
-  echo "###########################################"
+  echo "#######################################################"
   echo -e "\033[36m${_modify}\033[0m"
   echo -e "\033[33m${_usage}\033[0m"
   echo -e '\tautoexec reboot 100 [10]'
@@ -133,9 +133,9 @@ if [ -z "$1" ] ; then
   ROOTFS=`grep -o '\(http\|https\|tftp\)://[^ ]*' /proc/cmdline`
   if [ -n "$ROOTFS" ] ; then
     curl -f -s `dirname "$ROOTFS"`/firstrun -o firstrun
-  fi
-  if ! [ -s firstrun ] ; then
-    timeout 2 nc -l -o firstrun
+    if ! [ -s firstrun ] ; then
+      timeout 2 nc -l -o firstrun
+    fi
   fi
   if [ -s firstrun ] ; then
     source firstrun
@@ -154,6 +154,8 @@ else
     autorun
   else
     about
-    exec bash
+    if pgrep fbterm &>/dev/null ; then
+      exec bash
+    fi
   fi
 fi
