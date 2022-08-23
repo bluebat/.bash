@@ -1,5 +1,5 @@
 #!/bin/bash
-# 20140528~20211018 by Wei-Lun Chao
+# 20140528~20220630 by Wei-Lun Chao
 #
 toolName=wakethemup
 fileName=$toolName.set
@@ -13,10 +13,10 @@ if which wol &> /dev/null ; then
   wakeTool="wol"
 elif which ether-wake &> /dev/null ; then
   wakeTool="ether-wake -i $interface -b"
-elif which etherwake &> /dev/null ; then
-  wakeTool="etherwake -i $interface -b"
+elif which wakeonlan &> /dev/null ; then
+  wakeTool="wakeonlan"
 else
-  echo "Please install wol, net-tools or etherwake first."
+  echo "Please install wol, net-tools or wakeonlan first."
   exit 1
 fi
 

@@ -1,9 +1,10 @@
 #!/bin/bash
 # 20170116~20211018 by Wei-Lun Chao
 #
-modprobe snd_pcsp
+modprobe snd_pcsp &>/dev/null
 export PS1='\[\e[1;33m\]\u@\w> \[\e[0m\]'
 export SETFILE=$HOME/autoexec.set
+export LOGFILE=$HOME/autoexec.log
 
 case ${LANG%%.*} in
   cmn_TW|zh_TW)
@@ -59,7 +60,11 @@ esac
 function about {
   clear
   echo -ne "\033[32m"
-  banner "Firstrun"
+  if which banner &>/dev/null ; then
+    banner "Firstrun"
+  else
+    echo -n "FIRSTRUN: "
+  fi
   echo "${_description}"
   echo "#######################################################"
   echo -e "\033[36m${_modify}\033[0m"
@@ -94,7 +99,7 @@ function autorun {
       echo TOTAL=$TOTAL >> $SETFILE
       echo COUNT=$COUNT >> $SETFILE
       echo INTERVAL=$INTERVAL >> $SETFILE
-      echo $COUNT: `date +%c` >> $HOME/autoexec.log
+      echo $COUNT: `date +%c` >> $LOGFILE
       sync      
       case $COMMAND in
         reboot)
@@ -150,7 +155,7 @@ else
     echo TOTAL=$2 >> $SETFILE
     echo COUNT=0 >> $SETFILE
     echo INTERVAL=${3:-10} >> $SETFILE
-    echo "${1^^}: ${_repeated} $2 ${_times_wait} ${3:-10} ${_seconds}" > $HOME/autoexec.log
+    echo "${1^^}: ${_repeated} $2 ${_times_wait} ${3:-10} ${_seconds}" > $LOGFILE
     autorun
   else
     about
