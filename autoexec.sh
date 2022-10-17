@@ -1,15 +1,16 @@
-#!/bin/bash
-# 20170116~20211018 by Wei-Lun Chao
-#
+#!/usr/bin/bash
+# 20170116~20220823 by Wei-Lun Chao
+# MIT License
 modprobe snd_pcsp &>/dev/null
 export PS1='\[\e[1;33m\]\u@\w> \[\e[0m\]'
 export SETFILE=$HOME/autoexec.set
 export LOGFILE=$HOME/autoexec.log
+export OPTPATH=/opt
 
 case ${LANG%%.*} in
   cmn_TW|zh_TW)
     _description="Linux 自動執行測試程式"
-    _modify="修改 /opt/firstrun 內容以插入自動程序，或者："
+    _modify="修改 ${OPTPATH}/firstrun 內容以插入自動程序，或者："
     _usage="用法："
     _applications="應用："
     _hwqv="硬體資訊快速檢視"
@@ -17,7 +18,6 @@ case ${LANG%%.*} in
     _stress="監看壓力測試"
     _wait="等待"
     _to_exec="以執行"
-    _executed="已執行"
     _times="次"
     _repeat="重複"
     _times_wait="次，等待"
@@ -25,7 +25,7 @@ case ${LANG%%.*} in
     ;;
   yue_*)
     _description="Linux 自行測試程序"
-    _modify="修改 /opt/firstrun 內容俾攝入自動架步，定抑："
+    _modify="修改 ${OPTPATH}/firstrun 內容俾攝入自動架步，定抑："
     _usage="用法："
     _applications="應用："
     _hwqv="硬件資訊快脆望埋"
@@ -33,7 +33,6 @@ case ${LANG%%.*} in
     _stress="監視笮力測試"
     _wait="等緊"
     _to_exec="俾行"
-    _executed="已行"
     _times="次"
     _repeat="重複"
     _times_wait="次，等緊"
@@ -41,7 +40,7 @@ case ${LANG%%.*} in
     ;;
   *)
     _description="Linux Automatic Test Program"
-    _modify="Modify /opt/firstrun to insert automatic procedure, or:"
+    _modify="Modify ${OPTPATH}/firstrun to insert automatic procedure, or:"
     _usage="Usage:"
     _applications="Applicaitons:"
     _hwqv="HardWare Quick View"
@@ -49,7 +48,6 @@ case ${LANG%%.*} in
     _stress="Stress Test Monitor"
     _wait="Waiting"
     _to_exec=" to Execute"
-    _executed="Executed"
     _times="Times"
     _repeat="Repeated"
     _times_wait="Times, Waiting"
@@ -72,15 +70,16 @@ function about {
   echo -e '\tautoexec reboot 100 [10]'
   echo -e '\tautoexec rtcwake 50 [10]'
   echo -e '\tautoexec suspend 20 [10]'
+  echo -e '\tautoexec dpms 15 [10]'
   echo -e '\tautoexec poweroff 10 [10]'
   echo -e "\033[33m${_applications}\033[0m"
   echo -e "\thwqv #${_hwqv}"
   echo -e "\twakethemup #${_wakethemup}"
   echo -e "\tstress -c 2 & top ; pkill stress #${_stress}"
-  echo -e '\tdd if=/dev/sda | gzip -c > /opt/sata-or-usb.dd.gz'
-  echo -e '\tdd if=/dev/mmcblk0 | zip /opt/emmc-or-sd.img.zip -'
-  echo -e '\tgunzip -c /opt/sata-or-usb.dd.gz | dd of=/dev/sda'
-  echo -e '\tunzip -p /opt/emmc-or-sd.img.zip | dd of=/dev/mmcblk0'
+  echo -e "\tdd if=/dev/sda | gzip -c > ${OPTPATH}/sata-or-usb.dd.gz"
+  echo -e "\tdd if=/dev/mmcblk0 | zip ${OPTPATH}/emmc-or-sd.img.zip -"
+  echo -e "\tgunzip -c ${OPTPATH}/sata-or-usb.dd.gz | dd of=/dev/sda"
+  echo -e "\tunzip -p ${OPTPATH}/emmc-or-sd.img.zip | dd of=/dev/mmcblk0"
   echo -ne "\033[36m"
   ip addr | grep -A 1 link/ether | sed 's/^ *//'
   echo -e "\033[0m"
@@ -99,7 +98,7 @@ function autorun {
       echo TOTAL=$TOTAL >> $SETFILE
       echo COUNT=$COUNT >> $SETFILE
       echo INTERVAL=$INTERVAL >> $SETFILE
-      echo $COUNT: `date +%c` >> $LOGFILE
+      echo $COUNT: `date +'%F %T'` >> $LOGFILE
       sync      
       case $COMMAND in
         reboot)
@@ -114,14 +113,21 @@ function autorun {
           sleep 1
           autorun
           ;;
+        dpms)
+          xset dpms force suspend
+          while true ; do
+            sleep 1
+            [ `xprintidle` -lt 900 ] && break
+          done
+          autorun
+          ;;
         poweroff)
           systemctl poweroff
           sleep 1
           ;;
       esac
     else
-      about
-      echo -e "${_executed} ${COMMAND^^}: $TOTAL ${_times}"
+      more $LOGFILE
       exec bash
     fi
   else
@@ -134,7 +140,7 @@ if [ -z "$1" ] ; then
   COMMAND=""
   TOTAL=0
   COUNT=0
-  cd /opt
+  cd ${OPTPATH}
   ROOTFS=`grep -o '\(http\|https\|tftp\)://[^ ]*' /proc/cmdline`
   if [ -n "$ROOTFS" ] ; then
     curl -f -s `dirname "$ROOTFS"`/firstrun -o firstrun

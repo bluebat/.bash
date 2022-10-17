@@ -1,10 +1,10 @@
 #!/bin/bash
-# 20140528~20220630 by Wei-Lun Chao
+# 20140528~20221014 by Wei-Lun Chao
 #
 toolName=wakethemup
 fileName=$toolName.set
 logName=$toolName.`date +%Y%m%d%H%M`
-interface=`ip link|grep 'state UP'|sed 's/.: \(.*\):.*/\1/'`
+interface=`ip link|grep "state UP"|sed "s/.: \(.*\):.*/\1/"`
 if [ -z "$interface" ] ; then
   echo "No network connection."
   exit 1
@@ -34,7 +34,7 @@ function getThem {
       total[$index]=$data2
       sent[$index]=$data3
     else
-      mac[$index]='00:00:00:00:00:00'
+      mac[$index]="00:00:00:00:00:00"
       total[$index]=100
       sent[$index]=0
     fi
@@ -42,8 +42,8 @@ function getThem {
 }
 
 function mainMenu {
-  local choice=''
-  while [ "${choice,}" != 'q' ] ; do
+  local choice=""
+  while [ "${choice,}" != "q" ] ; do
     echo "   MAC                  Total   Sent"
     echo -e "\033[34m====================================\033[0m"
     for index in {0..9} ; do
@@ -68,8 +68,8 @@ function mainMenu {
 
 function setThem {
   local index="$1"
-  local choice=''
-  while [ "${choice,}" != 'b' ] ; do
+  local choice=""
+  while [ "${choice,}" != "b" ] ; do
     echo -e "\033[34m====================================\033[0m"
     echo -e "   \033[0m${mac[$index]}\t\033[33m${total[$index]}\t\033[32m${sent[$index]}\033[0m"
     echo -e "\033[36mM)AC Address\033[0m"
@@ -83,8 +83,8 @@ function setThem {
       t) read -p "Total test times: " total[$index] ;;
       r) sent[$index]=0 ;;
     esac
-    [ "${#mac[$index]}" -ne 17 ] && mac[$index]='00:00:00:00:00:00'
-    [ -z "${total[$index]}" ] && total[$index]='0'
+    [ "${#mac[$index]}" -ne 17 ] && mac[$index]="00:00:00:00:00:00"
+    [ -z "${total[$index]}" ] && total[$index]="0"
   done
 }
 
@@ -93,14 +93,14 @@ function testStart {
   while true ; do
     local counts=0
     for index in {0..9} ; do
-      if [ "${mac[$index]}" != '00:00:00:00:00:00' ] ; then
+      if [ "${mac[$index]}" != "00:00:00:00:00:00" ] ; then
         local count=$((total[$index]-sent[$index]))
         if [ "$count" -gt 0 ] ; then
           $wakeTool "${mac[$index]}"
           if [ "$wakeTool" != "wol" ] ; then
             echo "Waking up ${mac[$index]}..."
           fi
-          echo "`date --iso-8601=seconds` Waking up ${mac[$index]}" >> $logName
+          echo "`date +%F\ %T` Waking up ${mac[$index]}" >> $logName
           sent[$index]=$((sent[$index]+1))
           counts=$((counts+count-1))
         fi
@@ -109,7 +109,10 @@ function testStart {
     if [ "$counts" -gt 0 ] ; then
       echo -e "\033[1;30mWait $testInterval seconds. Press ESC to break...\033[0m"
       read -s -t "$testInterval" -n 1 choice
-      [ "$choice" = `echo -e "\e"` ] && break   
+      if [ "$choice" = `echo -e "\e"` ] ; then
+        read -s -t 0.1 -n 1 choice
+        [ -z "$choice" ] && break
+      fi
     else
       break
     fi
