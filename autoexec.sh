@@ -1,7 +1,7 @@
 #!/bin/bash
-# 20170116~20231003 by Wei-Lun Chao
+# 20170116~20231103 by Wei-Lun Chao
 # MIT License
-modprobe snd_pcsp &>/dev/null
+#modprobe snd_pcsp &>/dev/null
 export PS1='\[\e[1;33m\]\u@\w> \[\e[0m\]'
 if [ "${0##*.}" = sh ] ; then
   export SETFILE=`dirname $0`/autoexec.set
@@ -53,7 +53,7 @@ case ${LANG%%.*} in
     _wakethemup="WakeOnLan Manager"
     _stress="Stress Test Monitor"
     _delay="Delay"
-    _to_exec=" to Execute"
+    _to_exec=" to execute"
     _times="Times"
     _repeat="Repeated"
     _times_delay="Times, Delay"
@@ -62,7 +62,6 @@ case ${LANG%%.*} in
 esac
 
 function about {
-  clear
   echo -ne "\033[32m"
   if which banner &>/dev/null ; then
     banner "Firstrun"
@@ -89,7 +88,7 @@ function about {
   which gunzip >/dev/null && echo -e "\tgunzip -c ${OPTPATH}/sata-or-usb.dd.gz | dd of=/dev/sda"
   which unzip >/dev/null && echo -e "\tunzip -p ${OPTPATH}/emmc-or-sd.img.zip | dd of=/dev/mmcblk0"
   echo -ne "\033[36m"
-  ip addr | grep -A 1 link/ether | sed 's/^ *//'
+  ip addr | grep -A 3 link/ether | sed '/valid_lft/d' | sed 's/^ *//'
   echo -e "\033[0m"
 }
 
@@ -119,18 +118,18 @@ function autorun {
       echo COUNT=$COUNT >> $SETFILE
       echo INTERVAL=$INTERVAL >> $SETFILE
       if [ $COUNT -le $TOTAL ] ; then
-        echo -e "${_delay} $INTERVAL ${_seconds}${to_exec} ${COMMAND^^}: $COUNT/$TOTAL ..."
-        sleep $INTERVAL
+        echo -e "${_delay} $INTERVAL ${_seconds}${_to_exec} ${COMMAND^^}: $COUNT/$TOTAL ..."
+        for i in `seq $INTERVAL -1 1`; do echo -n "$i..."; sleep 1; done; echo 0
         case $COMMAND in
           reboot)
             reboot
             ;;
           rtcwake3)
-            rtcwake -m mem -s 6
+            rtcwake -m mem -s $INTERVAL
             autorun
             ;;
           rtcwake5)
-            rtcwake -m off -s 6 ; systemctl poweroff
+            rtcwake -m off -s $INTERVAL ; systemctl poweroff
             ;;
           suspend)
             systemctl suspend
@@ -152,6 +151,7 @@ function autorun {
         esac
       else
         more $LOGFILE
+        rm -f $SETFILE
         exec bash
       fi
     fi
@@ -189,8 +189,10 @@ elif [ "$1" = reboot -o "$1" = rtcwake3 -o "$1" = rtcwake5 -o "$1" = suspend -o 
   autorun
 else
   if [ "$1" = reset ] ; then
-    cat $SETFILE
-    rm -i $SETFILE
+    if [ -f $SETFILE ] ; then
+      cat $SETFILE
+      rm -i $SETFILE
+    fi
   fi
   about
   if pgrep fbterm &>/dev/null ; then
