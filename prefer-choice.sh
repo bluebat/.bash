@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # Preferred Choices Arrangement
-# MIT license, 20250923~20250926
+# MIT license, 20250923~20250930
 # Wei-Lun Chao <bluebat@member.fsf.org>
 
 # INPUT.txt sample: (lines between COMMENTBLOCKs)
@@ -37,9 +37,9 @@ elif test "$1" = -s -o "$1" = --sample; then
     test $RANDOM -lt 16384 && echo -n M || echo -n F
     choices=ABCDEF
     for pc in 6 5 4; do
-      pf=${choices:$(($RANDOM*$pc/32768)):1}
-      echo -n "" $pf
-      choices=${choices/$pf}
+      prefer=${choices:$(($RANDOM*$pc/32768)):1}
+      echo -n "" $prefer
+      choices=${choices/$prefer}
     done
     echo
   done
@@ -61,13 +61,13 @@ while read -a Data; do
     [1-9]|[1-9][0-9])
       Person[${Data[0]},name]="${Data[1]}"
       Person[${Data[0]},gender]="${Data[2]}"
-      for pf in {1..9}; do
-        if test -z "${Data[$(($pf+2))]}"; then
-          test $(($pf-1)) -gt $Prefer_Max && Prefer_Max=$(($pf-1))
+      for po in {1..9}; do
+        if test -z "${Data[$(($po+2))]}"; then
+          test $(($po-1)) -gt $Prefer_Max && Prefer_Max=$(($po-1))
           break
         else
-          Person[${Data[0]},$pf]="${Data[$(($pf+2))]}"
-          test "${Data[$(($pf+2))]}" = "*" && Prefer_Star=Y
+          Person[${Data[0]},$po]="${Data[$(($po+2))]}"
+          test "${Data[$(($po+2))]}" = "*" && Prefer_Star=Y
         fi
       done
       Person[${Data[0]},luck]=0
@@ -76,9 +76,9 @@ while read -a Data; do
   esac
 done < $Data_File
 
-for pm in letter star; do
-  for pf in {1..9}; do
-    for cc in {A..Z}; do
+for pt in letter star; do # prefer_type
+  for po in {1..9}; do # prefer_order
+    for cc in {A..Z}; do # choice_code
       if test -z "${Choice[$cc,female_min]}"; then
         Person_Gender="MF"
         Gender_Total=${Choice[$cc,male_max]}
@@ -89,18 +89,14 @@ for pm in letter star; do
       if test $Gender_Total -gt 0; then
         Male_Count=0
         Female_Count=0
-        test $pm = letter && Prefer_Value=$cc || Prefer_Value="*"
-        for pn in {1..99}; do
-          if test "${Person[$pn,$pf]}" = "$Prefer_Value" -a "${Arrange[$pn,$cc]}" != Y; then
-            if test "$Person_Gender" = "MF"; then
-              let Male_Count+=1
-            else
-              test "${Person[$pn,gender]}" = M && let Male_Count+=1 || let Female_Count+=1
-            fi
+        test $pt = letter && Prefer_Value=$cc || Prefer_Value="*"
+        for pn in {1..99}; do # person_number
+          if test "${Person[$pn,$po]}" = "$Prefer_Value" -a "${Arrange[$pn,$cc]}" != Y; then
+            test "$Person_Gender" = "MF" -o "${Person[$pn,gender]}" = M && let Male_Count+=1 || let Female_Count+=1
           fi
           test $pn -eq $Person_Max && break
         done
-        for pg in $Person_Gender; do
+        for pg in $Person_Gender; do # person_gender
           if test -z "${pg##*M*}"; then
             Person_Count=$Male_Count
             Gender_Max=${Choice[$cc,male_max]}
@@ -111,8 +107,8 @@ for pm in letter star; do
           if test $(($Person_Count*$Gender_Max)) -eq 0; then
             true
           elif test $Person_Count -le $Gender_Max; then
-            for pn in {1..99}; do
-              if test "${Person[$pn,$pf]}" = "$Prefer_Value" -a "${Arrange[$pn,$cc]}" != Y -a -z "${pg##*${Person[$pn,gender]}*}"; then
+            for pn in {1..99}; do # person_number
+              if test "${Person[$pn,$po]}" = "$Prefer_Value" -a "${Arrange[$pn,$cc]}" != Y -a -z "${pg##*${Person[$pn,gender]}*}"; then
                 Arrange[$pn,$cc]=Y
                 let Person[$pn,luck]+=1
                 if test -n "${pg##*M*}"; then
@@ -129,8 +125,8 @@ for pm in letter star; do
             done
           else
             while test $Gender_Max -gt 0; do
-              for pn in {1..99}; do
-                if test "${Person[$pn,$pf]}" = "$Prefer_Value" -a "${Arrange[$pn,$cc]}" != Y -a -z "${pg##*${Person[$pn,gender]}*}" -a $Gender_Max -gt 0; then
+              for pn in {1..99}; do # person_number
+                if test "${Person[$pn,$po]}" = "$Prefer_Value" -a "${Arrange[$pn,$cc]}" != Y -a -z "${pg##*${Person[$pn,gender]}*}" -a $Gender_Max -gt 0; then
                   if test $RANDOM -lt $((32768*$Gender_Max/$Person_Count/(1+${Person[$pn,luck]}))); then
                     Arrange[$pn,$cc]=Y
                     let Person[$pn,luck]+=1
@@ -154,7 +150,7 @@ for pm in letter star; do
       fi
       test $cc = $Choice_Max && break
     done
-    test $pf = $Prefer_Max && break
+    test $po = $Prefer_Max && break
   done
   test -z "$Prefer_Star" && break
 done
