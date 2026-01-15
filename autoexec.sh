@@ -1,7 +1,8 @@
 #!/bin/bash
-# 20170116~20231103 by Wei-Lun Chao
+# 20170116~20260114 by Wei-Lun Chao
 # MIT License
 #modprobe snd_pcsp &>/dev/null
+ulimit -s 32768
 export PS1='\[\e[1;33m\]\u@\w> \[\e[0m\]'
 if [ "${0##*.}" = sh ] ; then
   export SETFILE=`dirname $0`/autoexec.set
